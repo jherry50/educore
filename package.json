@@ -1,18 +1,36 @@
 {
   "name": "educore-sms",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Modern School Management System",
-  "scripts": {
-    "dev": "npm run dev --workspaces",
-    "install:all": "npm install --workspaces",
-    "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces"
-  },
+  "description": "A modern School Management System for Primary and Secondary Schools built with React, Express, MongoDB, and JavaScript.",
+  "author": "Bolarinwa Ilesanmi",
+  "license": "MIT",
   "workspaces": [
     "apps/web",
     "apps/api",
-    "packages/shared"
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api & npm run dev --workspace=apps/web",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "prettier --write .",
+    "test": "npm run test --workspaces",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "school",
+    "management",
+    "react",
+    "express",
+    "mongodb",
+    "education",
+    "sms"
   ]
 }
-
