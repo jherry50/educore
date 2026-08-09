@@ -1,13 +1,48 @@
-import dotenv from "dotenv";
 import app from "./app.js";
-import { connectDatabase } from "./config/database.js";
+import { env } from "./config/env.js";
+import {
+  connectDatabase,
+  disconnectDatabase,
+} from "./config/database.js";
+import logger from "./shared/logger/logger.js";
 
-dotenv.config();
+let server;
 
-await connectDatabase(process.env.MONGO_URI);
+async function bootstrap() {
+  try {
+    await connectDatabase();
 
-const PORT = process.env.PORT || 5000;
+    server = app.listen(env.PORT, () => {
+      logger.info(`EduCore API running on port ${env.PORT}`);
+    });
+  } catch (error) {
+    logger.fatal(error, "Failed to start EduCore API");
+    process.exit(1);
+  }
+}
 
-app.listen(PORT, () => {
-  console.log(`🚀 EduCore API running on http://localhost:${PORT}`);
+async function shutdown(signal) {
+  logger.info(`${signal} received. Shutting down...`);
+
+  if (server) {
+    server.close(async () => {
+      await disconnectDatabase();
+      process.exit(0);
+    });
+  }
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("uncaughtException", (error) => {
+  logger.fatal(error, "Uncaught exception");
+  process.exit(1);
 });
+
+process.on("unhandledRejection", (error) => {
+  logger.fatal(error, "Unhandled promise rejection");
+  process.exit(1);
+});
+
+bootstrap();

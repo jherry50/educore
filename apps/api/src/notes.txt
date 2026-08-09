@@ -1,0 +1,13 @@
+curl -i -c cookies.txt \
+  -X POST http://localhost:5001/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@educore.local",
+    "password": "ChangeMe@12345"
+  }'
+
+  to test login
+
+  Access refreshToken
+
+  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTc4YTBhMDMxMzc2MjllYWEzZWRhNDgiLCJyb2xlIjoiNmE3OGEwYTAzMTM3NjI5ZWFhM2VkYTQ3IiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc4NjI5MDg4NywiZXhwIjoxNzg2MjkxNzg3fQ.HY7FNo2N4aaBzX_DUriwy5MyZzxfBfaTgW_mDzgapS4
