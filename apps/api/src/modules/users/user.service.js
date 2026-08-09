@@ -156,7 +156,30 @@ export async function updateUser(id, data) {
     }
   }
 
-  Object.assign(user, data);
+//   Object.assign(user, data);
+    if (data.firstName !== undefined) {
+    user.firstName = data.firstName;
+    }
+
+    if (data.lastName !== undefined) {
+    user.lastName = data.lastName;
+    }
+
+    if (data.email !== undefined) {
+    user.email = data.email;
+    }
+
+    if (data.phone !== undefined) {
+    user.phone = data.phone;
+    }
+
+    if (data.role !== undefined) {
+    user.role = data.role;
+    }
+
+    if (data.isActive !== undefined) {
+    user.isActive = data.isActive;
+    }
 
   await user.save();
 
