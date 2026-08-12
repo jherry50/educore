@@ -13,6 +13,8 @@ import StudentFormPage from "../pages/admin/StudentFormPage.jsx";
 import StudentDetailsPage from "../pages/admin/StudentDetailsPage.jsx";
 import ClassesPage from "../pages/admin/ClassesPage.jsx";
 import ClassFormPage from "../pages/admin/ClassFormPage.jsx";
+import TeachersPage from "../pages/admin/TeachersPage.jsx";
+import TeacherFormPage from "../pages/admin/TeacherFormPage";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -68,6 +70,34 @@ export default function AppRoutes() {
                     <RoleRoute allowedRoles={["administrator"]}>
                     <PermissionRoute permission="dashboard.view">
                         <AdminDashboardPage />
+                    </PermissionRoute>
+                    </RoleRoute>
+                }
+            />
+            <Route
+                path="/admin/teachers"
+                element={
+                    <RoleRoute
+                    allowedRoles={[
+                        "administrator",
+                    ]}
+                    >
+                    <PermissionRoute permission="teachers.view">
+                        <TeachersPage />
+                    </PermissionRoute>
+                    </RoleRoute>
+                }
+            />
+             <Route
+                path="/admin/teachers/new"
+                element={
+                    <RoleRoute
+                    allowedRoles={[
+                        "administrator",
+                    ]}
+                    >
+                    <PermissionRoute permission="teachers.create">
+                        <TeacherFormPage />
                     </PermissionRoute>
                     </RoleRoute>
                 }
