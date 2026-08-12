@@ -1,22 +1,36 @@
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth";
+
+import {
+  getDefaultRoute,
+  canAccessRoleArea,
+} from "../../utils/roleRoutes";
 
 export default function LoginPage() {
   const {
     login,
+    user,
     isAuthenticated,
     loading,
   } = useAuth();
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate =
+    useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const location =
+    useLocation();
+
+  const [form, setForm] =
+    useState({
+      email: "",
+      password: "",
+    });
 
   const [error, setError] =
     useState("");
@@ -28,10 +42,14 @@ export default function LoginPage() {
     return null;
   }
 
+  /*
+   * If the user is already authenticated,
+   * send them to the correct role area.
+   */
   if (isAuthenticated) {
     return (
       <Navigate
-        to="/admin"
+        to={getDefaultRoute(user)}
         replace
       />
     );
@@ -52,11 +70,34 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      await login(form);
+      /*
+       * login() returns the authenticated
+       * user from AuthContext.
+       */
+      const authenticatedUser =
+        await login(form);
+
+      /*
+       * If the user originally tried to
+       * access a route belonging to their
+       * own role, return them there.
+       *
+       * Otherwise send them to their
+       * role's default dashboard.
+       */
+      const requestedPath =
+        location.state?.from?.pathname;
 
       const destination =
-        location.state?.from?.pathname ||
-        "/admin";
+        requestedPath &&
+        canAccessRoleArea(
+          authenticatedUser,
+          requestedPath
+        )
+          ? requestedPath
+          : getDefaultRoute(
+              authenticatedUser
+            );
 
       navigate(destination, {
         replace: true,

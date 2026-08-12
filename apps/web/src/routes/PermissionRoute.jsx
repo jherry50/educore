@@ -6,12 +6,13 @@ export default function PermissionRoute({
   permission,
   children,
 }) {
-  const { hasPermission } = useAuth();
+  const { hasPermission } =
+    useAuth();
 
   if (!hasPermission(permission)) {
     return (
       <Navigate
-        to="/admin/unauthorized"
+        to="/unauthorized"
         replace
       />
     );

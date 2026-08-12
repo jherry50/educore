@@ -4,106 +4,94 @@ import {
 
 import { useAuth } from "../../hooks/useAuth";
 
-const navigation = [
-  {
-    label: "Dashboard",
-    path: "/admin",
-    permission: "dashboard.view",
-  },
+import {
+  getUserNavigation,
+  getRoleName,
+} from "../../utils/navigation";
 
-  {
-    label: "Students",
-    path: "/admin/students",
-    permission: "students.view",
-  },
-
-  {
-    label: "Teachers",
-    path: "/admin/teachers",
-    permission: "teachers.view",
-  },
-
-  {
-    label: "Attendance",
-    path: "/admin/attendance",
-    permission: "attendance.view",
-  },
-
-  {
-    label: "Results",
-    path: "/admin/results",
-    permission: "results.view",
-  },
-
-  {
-    label: "Finance",
-    path: "/admin/finance",
-    permission: "finance.view",
-  },
-
-  {
-    label: "Reports",
-    path: "/admin/reports",
-    permission: "reports.view",
-  },
-
-  {
-    label: "Users",
-    path: "/admin/users",
-    permission: "users.view",
-  },
-
-  {
-    label: "Roles",
-    path: "/admin/roles",
-    permission: "roles.view",
-  },
-
-  {
-    label: "Permissions",
-    path: "/admin/permissions",
-    permission: "permissions.view",
-  },
-];
+const roleLabels = {
+  administrator: "Administrator",
+  teacher: "Teacher",
+  parent: "Parent",
+  student: "Student",
+};
 
 export default function Sidebar() {
-  const { hasPermission } =
-    useAuth();
+  const {
+    user,
+    logout,
+  } = useAuth();
 
-  const visibleNavigation =
-    navigation.filter((item) =>
-      hasPermission(item.permission)
-    );
+  const navigation =
+    getUserNavigation(user);
+
+  const roleName =
+    getRoleName(user);
+
+  const roleLabel =
+    roleLabels[roleName] ||
+    "User";
+
+  async function handleLogout() {
+    await logout();
+  }
 
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white lg:block">
-      <div className="flex h-16 items-center border-b px-6">
+    <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white lg:flex lg:flex-col">
+
+      {/* Logo */}
+      <div className="flex h-16 shrink-0 items-center border-b border-slate-200 px-6">
         <h1 className="text-xl font-bold text-blue-600">
           EduCore
         </h1>
       </div>
 
-      <nav className="space-y-1 p-4">
-        {visibleNavigation.map(
-          (item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/admin"}
-              className={({ isActive }) =>
-                [
-                  "block rounded-lg px-4 py-3 text-sm font-medium transition",
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-slate-600 hover:bg-slate-50",
-                ].join(" ")
-              }
-            >
-              {item.label}
-            </NavLink>
-          )
-        )}
+      {/* User */}
+      <div className="border-b border-slate-200 px-5 py-4">
+        <p className="truncate text-sm font-semibold text-slate-900">
+          {user?.firstName}{" "}
+          {user?.lastName}
+        </p>
+
+        <p className="mt-0.5 text-xs text-slate-500">
+          {roleLabel}
+        </p>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        {navigation.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={
+              item.path ===
+              `/${roleName}`
+            }
+            className={({ isActive }) =>
+              [
+                "block rounded-lg px-4 py-3 text-sm font-medium transition",
+                isActive
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-slate-600 hover:bg-slate-50",
+              ].join(" ")
+            }
+          >
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
+
+      {/* Logout */}
+      <div className="shrink-0 border-t border-slate-200 p-4">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+        >
+          Sign out
+        </button>
+      </div>
     </aside>
   );
 }

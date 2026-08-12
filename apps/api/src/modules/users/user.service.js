@@ -188,11 +188,22 @@ export async function updateUser(id, data) {
   return sanitizeUser(user);
 }
 
-export async function deleteUser(id) {
+export async function deleteUser(
+  id,
+  requestingUserId
+) {
+  if (id === requestingUserId) {
+    throw new ConflictError(
+      "You cannot delete your own account."
+    );
+  }
+
   const user = await User.findById(id);
 
   if (!user) {
-    throw new NotFoundError("User not found");
+    throw new NotFoundError(
+      "User not found"
+    );
   }
 
   await user.deleteOne();

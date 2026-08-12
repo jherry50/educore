@@ -97,7 +97,10 @@ export async function deleteUserController(
   next
 ) {
   try {
-    await deleteUser(req.params.id);
+    await deleteUser(
+        req.params.id,
+        req.user.id
+    );
 
     return successResponse(res, {
       message: "User deleted successfully",

@@ -4,6 +4,8 @@ import authRoutes from "../modules/auth/auth.routes.js";
 import userRoutes from "../modules/users/user.routes.js";
 import roleRoutes from "../modules/roles/role.routes.js";
 import permissionRoutes from "../modules/permissions/permission.routes.js";
+import studentRoutes from "../modules/students/student.routes.js";
+import classRoutes from "../modules/classes/class.routes.js";
 
 import {
   successResponse,
@@ -29,5 +31,9 @@ router.use("/users", userRoutes);
 router.use("/roles", roleRoutes);
 
 router.use("/permissions", permissionRoutes);
+
+router.use("/students", studentRoutes);
+
+router.use("/classes", classRoutes);
 
 export default router;
