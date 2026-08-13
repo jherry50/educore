@@ -14,7 +14,11 @@ import StudentDetailsPage from "../pages/admin/StudentDetailsPage.jsx";
 import ClassesPage from "../pages/admin/ClassesPage.jsx";
 import ClassFormPage from "../pages/admin/ClassFormPage.jsx";
 import TeachersPage from "../pages/admin/TeachersPage.jsx";
-import TeacherFormPage from "../pages/admin/TeacherFormPage";
+import TeacherFormPage from "../pages/admin/TeacherFormPage.jsx";
+import TeacherDetailsPage from "../pages/admin/TeacherDetailsPage.jsx";
+import TeacherEditPage from "../pages/admin/TeacherEditPage.jsx";
+
+import ClassDetailsPage from "../pages/classes/ClassDetailsPage.jsx";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -101,6 +105,22 @@ export default function AppRoutes() {
                     </PermissionRoute>
                     </RoleRoute>
                 }
+            />
+            <Route
+              path="admin/teachers/:id"
+              element={
+                <PermissionRoute permission="teachers.view">
+                  <TeacherDetailsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="/teachers/:id/edit"
+              element={
+                <PermissionRoute permission="teachers.update">
+                  <TeacherEditPage />
+                </PermissionRoute>
+              }
             />
             <Route
                 path="/admin/students"
@@ -207,6 +227,21 @@ export default function AppRoutes() {
             />
 
             <Route
+              path="/admin/classes/:id"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator",
+                    ]}
+                    >
+                  <PermissionRoute permission="classes.view">
+                    <ClassDetailsPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+            <Route
               path="/admin/users"
               element={
                 <RoleRoute
@@ -264,6 +299,38 @@ export default function AppRoutes() {
                     </PermissionRoute>
                     </RoleRoute>
                 }
+            />
+
+            <Route
+              path="/teacher/teachers"
+              element={
+                <RoleRoute allowedRoles={["teacher"]}>
+                  <PermissionRoute permission="teachers.view">
+                    <TeachersPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+            {/* <Route
+              path="/teachers/:id"
+              element={
+                <RoleRoute allowedRoles={["teacher"]}>
+                  <PermissionRoute permission="teachers.view">
+                    <TeacherDetailsPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            /> */}
+             <Route
+              path="/teacher/classes"
+              element={
+                <RoleRoute allowedRoles={["teacher"]}>
+                  <PermissionRoute permission="classes.view">
+                    <ClassesPage/>
+                  </PermissionRoute>
+                </RoleRoute>
+              }
             />
 
             {/* ========================= */}

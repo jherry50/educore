@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {hasPermission} from "../../utils/permissions";
 import { useAuth } from "../../hooks/useAuth";
 
 import {
@@ -12,7 +11,7 @@ export default function TeachersPage() {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { user } = useAuth();
+  const { hasPermission } = useAuth();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -91,7 +90,7 @@ export default function TeachersPage() {
           </p>
         </div>
 
-        {hasPermission(user,"teachers.create") && (
+        {hasPermission("teachers.create") && (
           <Link
             to="/admin/teachers/new"
             className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
@@ -303,24 +302,26 @@ export default function TeachersPage() {
                             View
                           </Link>
 
-                          <Link
+                          {hasPermission("teachers.create") && ( <Link
                             to={`/admin/teachers/${teacher._id}/edit`}
                             className="rounded-md px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
                           >
                             Edit
-                          </Link>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDelete(
-                                teacher._id
-                              )
+                            </Link>
+                          )}
+                          {hasPermission("teacher.delete") && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDelete(
+                                  teacher._id
+                                )
                             }
                             className="rounded-md px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
                           >
                             Delete
                           </button>
+                          )}
                         </div>
                       </td>
                     </tr>

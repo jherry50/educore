@@ -28,6 +28,20 @@ export async function createClass(data) {
   return response.data;
 }
 
+export async function assignClassTeacher(
+  classId,
+  teacherId
+) {
+  const response = await api.patch(
+    `/classes/${classId}/teacher`,
+    {
+      teacherId,
+    }
+  );
+
+  return response.data;
+}
+
 export async function updateClass(
   id,
   data

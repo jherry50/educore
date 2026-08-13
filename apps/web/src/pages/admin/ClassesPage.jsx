@@ -8,8 +8,11 @@ import {
   getClasses,
   deleteClass,
 } from "../../api/classApi";
+import { useAuth } from "../../hooks/useAuth";
+
 
 export default function ClassesPage() {
+  const { hasPermission } = useAuth();
   const [classes, setClasses] =
     useState([]);
 
@@ -109,12 +112,14 @@ export default function ClassesPage() {
           </p>
         </div>
 
-        <Link
-          to="/admin/classes/new"
-          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          Add Class
-        </Link>
+        {hasPermission("classes.create") &&
+          <Link
+            to="/admin/classes/new"
+            className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Add Class
+          </Link>
+        }
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -258,7 +263,7 @@ export default function ClassesPage() {
 
                       <td className="px-6 py-4 text-slate-600">
                         {schoolClass.classTeacher
-                          ? `${schoolClass.classTeacher.firstName} ${schoolClass.classTeacher.lastName}`
+                          ? `${schoolClass.classTeacher.user.firstName} ${schoolClass.classTeacher.user.lastName}`
                           : "Not assigned"}
                       </td>
 

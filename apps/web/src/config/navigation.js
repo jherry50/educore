@@ -83,6 +83,11 @@ export const navigation = {
       path: "/teacher/students",
       permission: "students.view",
     },
+     {
+      label: "Teachers",
+      path: "/teacher/teachers",
+      permission: "teachers.view",
+    },
     {
       label: "Classes",
       path: "/teacher/classes",

@@ -4,6 +4,7 @@ import {
   getClassById,
   updateClass,
   deleteClass,
+  assignClassTeacher,
 } from "./class.service.js";
 
 export async function create(
@@ -157,6 +158,36 @@ export async function remove(
       success: true,
       message:
         "Class deleted successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function assignTeacher(
+  req,
+  res,
+  next
+) {
+  try {
+    const schoolClass =
+      await assignClassTeacher(
+        req.params.id,
+        req.body.teacherId
+      );
+
+    if (!schoolClass) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found.",
+      });
+    }
+
+    res.json({
+      success: true,
+      message:
+        "Class teacher assigned successfully.",
+      data: schoolClass,
     });
   } catch (error) {
     next(error);

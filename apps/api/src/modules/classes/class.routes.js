@@ -6,6 +6,7 @@ import {
   getOne,
   update,
   remove,
+  assignTeacher,
 } from "./class.controller.js";
 
 import { authenticate } from "../../middleware/authenticate.js";
@@ -31,6 +32,12 @@ router.post(
   "/",
   authorize("classes.create"),
   create
+);
+
+router.patch(
+  "/:id/teacher",
+  authorize("classes.update"),
+  assignTeacher
 );
 
 router.patch(
