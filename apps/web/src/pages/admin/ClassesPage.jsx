@@ -270,31 +270,37 @@ export default function ClassesPage() {
                       <td className="px-6 py-4">
                         <div className="flex gap-3">
 
-                          <Link
-                            to={`/admin/classes/${schoolClass._id}`}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            View
-                          </Link>
+                          {hasPermission("classes.view") && (
+                            <Link
+                              to={`/admin/classes/${schoolClass._id}`}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              View
+                            </Link>
+                          )}
 
-                          <Link
-                            to={`/admin/classes/${schoolClass._id}/edit`}
-                            className="text-slate-600 hover:text-slate-900"
-                          >
-                            Edit
-                          </Link>
+                          {hasPermission("classes.update") && (
+                            <Link
+                              to={`/admin/classes/${schoolClass._id}/edit`}
+                              className="text-slate-600 hover:text-slate-900"
+                            >
+                              Edit
+                            </Link>
+                          )}
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDelete(
-                                schoolClass._id
-                              )
-                            }
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
+                          {hasPermission("classes.delete") && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDelete(
+                                  schoolClass._id
+                                )
+                              }
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          )}
 
                         </div>
                       </td>

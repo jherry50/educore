@@ -32,7 +32,6 @@ export default function ClassDetailsPage() {
     hasPermission("classes.update");
 
   useEffect(() => {
-    debugger;
     loadClass();
   }, [id]);
 

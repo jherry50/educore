@@ -17,8 +17,8 @@ import TeachersPage from "../pages/admin/TeachersPage.jsx";
 import TeacherFormPage from "../pages/admin/TeacherFormPage.jsx";
 import TeacherDetailsPage from "../pages/admin/TeacherDetailsPage.jsx";
 import TeacherEditPage from "../pages/admin/TeacherEditPage.jsx";
-
 import ClassDetailsPage from "../pages/classes/ClassDetailsPage.jsx";
+import SubjectsPage from "../pages/subjects/SubjectsPage.jsx";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -238,6 +238,15 @@ export default function AppRoutes() {
                     <ClassDetailsPage />
                   </PermissionRoute>
                 </RoleRoute>
+              }
+            />
+
+            <Route
+              path="/admin/subjects"
+              element={
+                <PermissionRoute permission="subjects.view">
+                  <SubjectsPage />
+                </PermissionRoute>
               }
             />
 

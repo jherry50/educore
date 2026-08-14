@@ -7,6 +7,7 @@ import permissionRoutes from "../modules/permissions/permission.routes.js";
 import studentRoutes from "../modules/students/student.routes.js";
 import classRoutes from "../modules/classes/class.routes.js";
 import teacherRoutes from "../modules/teachers/teacher.routes.js";
+import subjectRoutes from "../modules/subjects/subject.routes.js";
 
 import {
   successResponse,
@@ -38,5 +39,7 @@ router.use("/students", studentRoutes);
 router.use("/classes", classRoutes);
 
 router.use("/teachers", teacherRoutes);
+
+router.use("/subjects", subjectRoutes);
 
 export default router;
