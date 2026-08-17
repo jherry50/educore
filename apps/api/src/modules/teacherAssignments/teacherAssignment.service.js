@@ -1,13 +1,195 @@
+import mongoose from "mongoose";
+
 import { TeacherAssignment } from "./teacherAssignment.model.js";
+import { Teacher } from "../teachers/teacher.model.js";
+import { Subject } from "../subjects/subject.model.js";
+import { SchoolClass as Class } from "../classes/class.model.js";
+import { AcademicSession } from "../academicSessions/academicSession.model.js";
+
+async function validateAssignmentEntities(data) {
+  const {
+    teacher,
+    subject,
+    class: classId,
+    academicSession,
+    term,
+  } = data;
+
+  // ----------------------------------------
+  // Validate IDs
+  // ----------------------------------------
+
+  if (
+    !mongoose.Types.ObjectId.isValid(teacher)
+  ) {
+    throw new Error(
+      "Invalid teacher ID."
+    );
+  }
+
+  if (
+    !mongoose.Types.ObjectId.isValid(subject)
+  ) {
+    throw new Error(
+      "Invalid subject ID."
+    );
+  }
+
+  if (
+    !mongoose.Types.ObjectId.isValid(classId)
+  ) {
+    throw new Error(
+      "Invalid class ID."
+    );
+  }
+
+  if (
+    !mongoose.Types.ObjectId.isValid(
+      academicSession
+    )
+  ) {
+    throw new Error(
+      "Invalid academic session ID."
+    );
+  }
+
+  // ----------------------------------------
+  // Validate term
+  // ----------------------------------------
+
+  const allowedTerms = [
+    "First Term",
+    "Second Term",
+    "Third Term",
+  ];
+
+  if (!allowedTerms.includes(term)) {
+    throw new Error(
+      "Invalid academic term."
+    );
+  }
+
+  // ----------------------------------------
+  // Fetch entities
+  // ----------------------------------------
+
+  const [
+    teacherRecord,
+    subjectRecord,
+    classRecord,
+    academicSessionRecord,
+  ] = await Promise.all([
+    Teacher.findById(teacher),
+    Subject.findById(subject),
+    Class.findById(classId),
+    AcademicSession.findById(
+      academicSession
+    ),
+  ]);
+
+  // ----------------------------------------
+  // Teacher
+  // ----------------------------------------
+
+  if (!teacherRecord) {
+    throw new Error(
+      "Teacher not found."
+    );
+  }
+
+  if (teacherRecord.isActive === false) {
+    throw new Error(
+      "Cannot assign an inactive teacher."
+    );
+  }
+
+  // ----------------------------------------
+  // Subject
+  // ----------------------------------------
+
+  if (!subjectRecord) {
+    throw new Error(
+      "Subject not found."
+    );
+  }
+
+  if (subjectRecord.isActive === false) {
+    throw new Error(
+      "Cannot assign an inactive subject."
+    );
+  }
+
+  // ----------------------------------------
+  // Class
+  // ----------------------------------------
+
+  if (!classRecord) {
+    throw new Error(
+      "Class not found."
+    );
+  }
+
+  if (classRecord.isActive === false) {
+    throw new Error(
+      "Cannot assign an inactive class."
+    );
+  }
+
+  // ----------------------------------------
+  // Academic Session
+  // ----------------------------------------
+
+  if (!academicSessionRecord) {
+    throw new Error(
+      "Academic session not found."
+    );
+  }
+
+  if (
+    academicSessionRecord.isCompleted
+  ) {
+    throw new Error(
+      "Cannot create an assignment for a completed academic session."
+    );
+  }
+
+  // ----------------------------------------
+  // Validate term belongs to session
+  // ----------------------------------------
+
+  const selectedTerm =
+    academicSessionRecord.terms?.find(
+      (sessionTerm) =>
+        sessionTerm.name === term
+    );
+
+  if (!selectedTerm) {
+    throw new Error(
+      `${term} does not exist in the selected academic session.`
+    );
+  }
+
+  return {
+    teacherRecord,
+    subjectRecord,
+    classRecord,
+    academicSessionRecord,
+    selectedTerm,
+  };
+}
 
 export async function createAssignment(data) {
+  await validateAssignmentEntities(data);
+
   return TeacherAssignment.create({
     teacher: data.teacher,
     subject: data.subject,
     class: data.class,
-    academicSession: data.academicSession,
+    academicSession:
+      data.academicSession,
     term: data.term,
-    isActive: data.isActive ?? true,
+    isActive:
+      data.isActive ?? true,
   });
 }
 
@@ -63,6 +245,10 @@ export async function getAssignments(
       "class",
       "name code section level"
     )
+    .populate(
+      "academicSession",
+      "name startDate endDate isActive isCompleted terms"
+    )
     .sort({
       createdAt: -1,
     });
@@ -87,6 +273,10 @@ export async function getAssignmentById(
     .populate(
       "class",
       "name code section level"
+    )
+    .populate(
+      "academicSession",
+      "name startDate endDate isActive isCompleted terms"
     );
 }
 
@@ -94,32 +284,39 @@ export async function updateAssignment(
   id,
   data
 ) {
-  return TeacherAssignment.findByIdAndUpdate(
-    id,
-    {
-      $set: data,
-    },
-    {
-      new: true,
-      runValidators: true,
-    }
-  )
-    .populate({
-      path: "teacher",
-      populate: {
-        path: "user",
-        select:
-          "firstName lastName email",
-      },
-    })
-    .populate(
-      "subject",
-      "name code section isCore"
-    )
-    .populate(
-      "class",
-      "name code section level"
-    );
+  const existing =
+    await TeacherAssignment.findById(id);
+
+  if (!existing) {
+    return null;
+  }
+
+  const mergedData = {
+    teacher:
+      data.teacher ?? existing.teacher,
+    subject:
+      data.subject ?? existing.subject,
+    class:
+      data.class ?? existing.class,
+    academicSession:
+      data.academicSession ??
+      existing.academicSession,
+    term:
+      data.term ?? existing.term,
+    isActive:
+      data.isActive ??
+      existing.isActive,
+  };
+
+  await validateAssignmentEntities(
+    mergedData
+  );
+
+  Object.assign(existing, mergedData);
+
+  await existing.save();
+
+  return getAssignmentById(id);
 }
 
 export async function deleteAssignment(

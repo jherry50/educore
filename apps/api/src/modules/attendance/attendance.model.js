@@ -1,17 +1,11 @@
 import mongoose from "mongoose";
 
-const teacherAssignmentSchema =
+const attendanceSchema =
   new mongoose.Schema(
     {
-      teacher: {
+      student: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Teacher",
-        required: true,
-      },
-
-      subject: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Subject",
+        ref: "Student",
         required: true,
       },
 
@@ -25,7 +19,7 @@ const teacherAssignmentSchema =
         type: mongoose.Schema.Types.ObjectId,
         ref: "AcademicSession",
         required: true,
-     },
+      },
 
       term: {
         type: String,
@@ -37,9 +31,33 @@ const teacherAssignmentSchema =
         required: true,
       },
 
-      isActive: {
-        type: Boolean,
-        default: true,
+      date: {
+        type: Date,
+        required: true,
+      },
+
+      status: {
+        type: String,
+        enum: [
+          "Present",
+          "Absent",
+          "Late",
+          "Excused",
+        ],
+        required: true,
+      },
+
+      remarks: {
+        type: String,
+        trim: true,
+        maxlength: 500,
+        default: "",
+      },
+
+      recordedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
       },
     },
     {
@@ -47,43 +65,39 @@ const teacherAssignmentSchema =
     }
   );
 
-teacherAssignmentSchema.index(
+attendanceSchema.index(
   {
-    teacher: 1,
-    subject: 1,
-    class: 1,
+    student: 1,
     academicSession: 1,
     term: 1,
+    date: 1,
   },
   {
     unique: true,
   }
 );
 
-teacherAssignmentSchema.index({
-  teacher: 1,
-  academicSession: 1,
-  term: 1,
-});
-
-teacherAssignmentSchema.index({
+attendanceSchema.index({
   class: 1,
   academicSession: 1,
   term: 1,
+  date: 1,
 });
 
-teacherAssignmentSchema.index({
-  subject: 1,
+attendanceSchema.index({
+  academicSession: 1,
+  term: 1,
+  date: 1,
+});
+
+attendanceSchema.index({
+  student: 1,
   academicSession: 1,
   term: 1,
 });
 
-teacherAssignmentSchema.index({
-  isActive: 1,
-});
-
-export const TeacherAssignment =
+export const Attendance =
   mongoose.model(
-    "TeacherAssignment",
-    teacherAssignmentSchema
+    "Attendance",
+    attendanceSchema
   );

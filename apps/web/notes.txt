@@ -1,0 +1,9 @@
+  const visibleNavigation =
+    navigation.filter((item) =>
+      hasPermission(item.permission)
+    );
+
+  const visibleSettingsNavigation =
+    settingsNavigation.filter((item) =>
+      hasPermission(item.permission)
+    );

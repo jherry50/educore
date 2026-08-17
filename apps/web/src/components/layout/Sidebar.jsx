@@ -16,14 +16,28 @@ const roleLabels = {
   student: "Student",
 };
 
+const settingsNavigation = [
+  {
+    label: "Academic Sessions",
+    path: "/admin/academic-sessions",
+    permission: "settings.view",
+  },
+];
+
 export default function Sidebar() {
   const {
     user,
     logout,
+    hasPermission,
   } = useAuth();
 
   const navigation =
     getUserNavigation(user);
+
+  const visibleSettingsNavigation =
+    settingsNavigation.filter((item) =>
+      hasPermission(item.permission)
+  );
 
   const roleName =
     getRoleName(user);
@@ -80,6 +94,36 @@ export default function Sidebar() {
             {item.label}
           </NavLink>
         ))}
+         {/* Settings */}
+        {visibleSettingsNavigation.length >
+          0 && (
+          <div className="pt-6">
+            <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Settings
+            </p>
+
+            <div className="space-y-1">
+              {visibleSettingsNavigation.map(
+                (item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      [
+                        "block rounded-lg px-4 py-3 text-sm font-medium transition",
+                        isActive
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-slate-600 hover:bg-slate-50",
+                      ].join(" ")
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                )
+                 )}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Logout */}

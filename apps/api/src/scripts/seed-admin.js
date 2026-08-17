@@ -65,6 +65,7 @@ const resources = {
     "view",
     "create",
     "update",
+    "delete",
     "export",
   ],
 

@@ -19,6 +19,8 @@ import TeacherDetailsPage from "../pages/admin/TeacherDetailsPage.jsx";
 import TeacherEditPage from "../pages/admin/TeacherEditPage.jsx";
 import ClassDetailsPage from "../pages/classes/ClassDetailsPage.jsx";
 import SubjectsPage from "../pages/subjects/SubjectsPage.jsx";
+import TeacherAssignmentsPage from "../pages/teacherAssignments/TeacherAssignmentsPage.jsx";
+import AcademicSessionsPage from "../pages/academicSessions/AcademicSessionsPage.jsx";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -119,6 +121,14 @@ export default function AppRoutes() {
               element={
                 <PermissionRoute permission="teachers.update">
                   <TeacherEditPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="/admin/teacher-assignments"
+              element={
+                <PermissionRoute permission="teachers.view">
+                  <TeacherAssignmentsPage />
                 </PermissionRoute>
               }
             />
@@ -292,6 +302,22 @@ export default function AppRoutes() {
                     <PermissionsPage />
                   </PermissionRoute>
                 </RoleRoute>
+              }
+            />
+
+            <Route
+              path="/admin/academic-sessions"
+              element={
+                <RoleRoute
+                  allowedRoles={[
+                    "administrator",
+                  ]}
+                >
+                  <PermissionRoute permission="settings.view">
+                    <AcademicSessionsPage />
+                  </PermissionRoute>
+                </RoleRoute>
+
               }
             />
 

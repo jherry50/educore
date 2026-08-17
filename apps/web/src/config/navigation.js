@@ -16,6 +16,11 @@ export const navigation = {
       permission: "teachers.view",
     },
     {
+      label: "Teacher Assignments",
+      path: "/admin/teacher-assignments",
+      permission: "teachers.view",
+    },
+    {
       label: "Parents",
       path: "/admin/parents",
       permission: "parents.view",
