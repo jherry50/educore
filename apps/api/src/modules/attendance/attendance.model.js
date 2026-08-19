@@ -96,6 +96,19 @@ attendanceSchema.index({
   term: 1,
 });
 
+attendanceSchema.index(
+  {
+    student: 1,
+    class: 1,
+    academicSession: 1,
+    term: 1,
+    date: 1,
+  },
+  {
+    unique: true,
+  }
+);
+
 export const Attendance =
   mongoose.model(
     "Attendance",

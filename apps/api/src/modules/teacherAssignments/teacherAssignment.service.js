@@ -326,3 +326,108 @@ export async function deleteAssignment(
     id
   );
 }
+
+export async function getTeacherAssignedClasses({
+  teacher,
+  academicSession,
+  term,
+}) {
+  const filter = {
+    teacher,
+    isActive: true,
+  };
+
+  if (academicSession) {
+    filter.academicSession =
+      academicSession;
+  }
+
+  if (term) {
+    filter.term = term;
+  }
+
+  const assignments =
+    await TeacherAssignment.find(filter)
+      .populate(
+        "class",
+        "name code section level isActive"
+      )
+      .lean();
+
+  const classes = assignments
+    .map(
+      (assignment) =>
+        assignment.class
+    )
+    .filter(Boolean)
+    .filter(
+      (classItem) =>
+        classItem.isActive !== false
+    );
+
+  /*
+   * Remove duplicate classes.
+   *
+   * A teacher may teach multiple
+   * subjects in the same class.
+   */
+  const uniqueClasses = Array.from(
+    new Map(
+      classes.map((classItem) => [
+        classItem._id.toString(),
+        classItem,
+      ])
+    ).values()
+  );
+
+  return uniqueClasses;
+}
+
+export async function getMyTeacherAssignments({
+  userId,
+  academicSession,
+  term,
+}) {
+  const teacher = await Teacher.findOne({
+    user: userId,
+    isActive: true,
+  });
+
+  if (!teacher) {
+    throw new Error(
+      "Teacher profile not found."
+    );
+  }
+
+  const filter = {
+    teacher: teacher._id,
+    isActive: true,
+  };
+
+  if (academicSession) {
+    filter.academicSession =
+      academicSession;
+  }
+
+  if (term) {
+    filter.term = term;
+  }
+
+  return TeacherAssignment.find(filter)
+    .populate(
+      "class",
+      "name code section level isActive"
+    )
+    .populate(
+      "subject",
+      "name code"
+    )
+    .populate(
+      "academicSession",
+      "name"
+    )
+    .sort({
+      createdAt: -1,
+    })
+    .lean();
+}

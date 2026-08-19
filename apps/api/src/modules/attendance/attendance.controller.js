@@ -93,9 +93,33 @@ export async function getAttendanceController(
 ) {
   try {
     const attendance =
-      await getAttendance(
-        req.query
-      );
+      await getAttendance({
+        student:
+          req.query.student,
+
+        class:
+          req.query.class,
+
+        academicSession:
+          req.query.academicSession,
+
+        term:
+          req.query.term,
+
+        status:
+          req.query.status,
+
+        date:
+          req.query.date,
+
+        startDate:
+          req.query.startDate,
+
+        endDate:
+          req.query.endDate,
+      }, 
+      req.user._id
+    );
 
     return res.status(200).json({
       success: true,

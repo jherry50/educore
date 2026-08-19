@@ -6,6 +6,10 @@ import { SchoolClass as Class } from "../classes/class.model.js";
 import {
   AcademicSession,
 } from "../academicSessions/academicSession.model.js";
+import { Teacher } from "../teachers/teacher.model.js";
+import {
+  TeacherAssignment,
+} from "../teacherAssignments/teacherAssignment.model.js";
 
 const ALLOWED_TERMS = [
   "First Term",
@@ -310,6 +314,61 @@ function populateAttendance(
     });
 }
 
+async function getTeacherByUserId(
+  userId
+) {
+  validateObjectId(
+    userId,
+    "user"
+  );
+
+  const teacher =
+    await Teacher.findOne({
+      user: userId,
+      isActive: true,
+    });
+
+  return teacher;
+}
+
+async function ensureTeacherCanAccessClass({
+  userId,
+  classId,
+  academicSession,
+  term,
+}) {
+  const teacher =
+    await getTeacherByUserId(
+      userId
+    );
+
+  if (!teacher) {
+    throw new Error(
+      "Teacher profile not found."
+    );
+  }
+
+  const assignment =
+    await TeacherAssignment.findOne({
+      teacher: teacher._id,
+      class: classId,
+      academicSession,
+      term,
+      isActive: true,
+    });
+
+  if (!assignment) {
+    throw new Error(
+      "You are not assigned to this class for the selected academic session and term."
+    );
+  }
+
+  return {
+    teacher,
+    assignment,
+  };
+}
+
 /**
  * Create a single attendance record.
  */
@@ -325,6 +384,14 @@ export async function createAttendance(
   await validateAttendanceEntities(
     data
   );
+
+  await ensureTeacherCanAccessClass({
+    userId: recordedBy,
+    classId: data.class,
+    academicSession:
+      data.academicSession,
+    term: data.term,
+  });
 
   const attendanceDate =
     normalizeDate(data.date);
@@ -408,6 +475,13 @@ export async function saveBulkAttendance(
     academicSession,
     "academic session"
   );
+
+  await ensureTeacherCanAccessClass({
+      userId: recordedBy,
+      classId,
+      academicSession,
+      term,
+  });
 
   if (!Array.isArray(records)) {
     throw new Error(
@@ -655,7 +729,8 @@ export async function saveBulkAttendance(
  * Get attendance records.
  */
 export async function getAttendance(
-  filters = {}
+  filters = {},
+  userId
 ) {
   const query = {};
 
@@ -744,6 +819,49 @@ export async function getAttendance(
     }
   }
 
+  const teacher = await Teacher.findOne({
+  user: userId,
+  isActive: true,
+});
+
+if (teacher) {
+  const assignedClasses =
+    await TeacherAssignment.find({
+      teacher: teacher._id,
+      isActive: true,
+      ...(academicSession
+        ? {
+            academicSession,
+          }
+        : {}),
+      ...(term
+        ? {
+            term,
+          }
+        : {}),
+    }).distinct("class");
+
+  /*
+   * If a specific class was requested,
+   * make sure the teacher is assigned
+   * to it.
+   */
+  if (classId) {
+    const hasAccess =
+      assignedClasses.some(
+        (id) =>
+          id.toString() ===
+          classId.toString()
+      );
+
+    if (!hasAccess) {
+      throw new Error(
+        "You are not assigned to this class for the selected academic session and term."
+      );
+    }
+  }
+}
+
   const attendance =
     populateAttendance(
       Attendance.find(query)
@@ -829,6 +947,14 @@ export async function updateAttendance(
   await validateAttendanceEntities(
     mergedData
   );
+
+  await ensureTeacherCanAccessClass({
+    userId: recordedBy,
+    classId: mergedData.class,
+    academicSession:
+      mergedData.academicSession,
+    term: mergedData.term,
+  });
 
   existing.student =
     mergedData.student;

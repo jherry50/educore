@@ -6,6 +6,7 @@ import {
   getOne,
   update,
   remove,
+  getMyTeacherAssignmentsController,
 } from "./teacherAssignment.controller.js";
 
 import { authenticate } from "../../middleware/authenticate.js";
@@ -19,6 +20,12 @@ router.get(
   "/",
   authorize("teachers.view"),
   list
+);
+
+router.get(
+  "/my-assignments",
+  authorize("teachers.view"),
+  getMyTeacherAssignmentsController
 );
 
 router.get(

@@ -21,6 +21,8 @@ import ClassDetailsPage from "../pages/classes/ClassDetailsPage.jsx";
 import SubjectsPage from "../pages/subjects/SubjectsPage.jsx";
 import TeacherAssignmentsPage from "../pages/teacherAssignments/TeacherAssignmentsPage.jsx";
 import AcademicSessionsPage from "../pages/academicSessions/AcademicSessionsPage.jsx";
+import AttendancePage from "../pages/attendance/AttendancePage.jsx";
+import AttendanceHistoryPage from "../pages/attendance/AttendanceHistoryPage";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -261,6 +263,36 @@ export default function AppRoutes() {
             />
 
             <Route
+              path="/attendance"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator", "teacher"
+                    ]}
+                    >
+                  <PermissionRoute permission="attendance.view">
+                    <AttendancePage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+             <Route
+              path="/attendance-history"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator", "teacher"
+                    ]}
+                    >
+                  <PermissionRoute permission="attendance.view">
+                    <AttendanceHistoryPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+            <Route
               path="/admin/users"
               element={
                 <RoleRoute
@@ -367,6 +399,26 @@ export default function AppRoutes() {
                 </RoleRoute>
               }
             />
+            <Route
+              path="/teacher/teacher-assignments"
+              element={
+                <RoleRoute allowedRoles={["teacher"]}>
+                  <PermissionRoute permission="teachers.view">
+                    <TeacherAssignmentsPage/>
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+            {/* <Route
+              path="/teacher/attendance"
+              element={
+                <RoleRoute allowedRoles={["teacher"]}>
+                  <PermissionRoute permission="attendance.view">
+                    <AttendancePage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            /> */}
 
             {/* ========================= */}
             {/* PARENT */}

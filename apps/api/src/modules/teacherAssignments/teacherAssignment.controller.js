@@ -4,6 +4,7 @@ import {
   getAssignmentById,
   updateAssignment,
   deleteAssignment,
+  getMyTeacherAssignments,
 } from "./teacherAssignment.service.js";
 
 export async function create(
@@ -182,5 +183,37 @@ export async function remove(
     });
   } catch (error) {
     next(error);
+  }
+}
+
+export async function getMyTeacherAssignmentsController(
+  req,
+  res
+) {
+  try {
+    const assignments =
+      await getMyTeacherAssignments({
+        userId: req.user._id,
+        academicSession:
+          req.query.academicSession,
+        term: req.query.term,
+      });
+
+    return res.status(200).json({
+      success: true,
+      data: assignments,
+    });
+  } catch (error) {
+    console.error(
+      "Get my teacher assignments error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to fetch teacher assignments.",
+    });
   }
 }

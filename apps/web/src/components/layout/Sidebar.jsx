@@ -24,6 +24,19 @@ const settingsNavigation = [
   },
 ];
 
+const attendanceNavigation = [
+  {
+    label: "Take Attendance",
+    path: "/attendance",
+    permission: "attendance.view",
+  },
+  {
+    label: "Attendance History",
+    path: "/attendance-history",
+    permission: "attendance.view",
+  },
+];
+
 export default function Sidebar() {
   const {
     user,
@@ -36,6 +49,11 @@ export default function Sidebar() {
 
   const visibleSettingsNavigation =
     settingsNavigation.filter((item) =>
+      hasPermission(item.permission)
+  );
+
+  const visibleAttendanceNavigation =
+    attendanceNavigation.filter((item) =>
       hasPermission(item.permission)
   );
 
@@ -94,6 +112,38 @@ export default function Sidebar() {
             {item.label}
           </NavLink>
         ))}
+
+         {/* Attendance */}
+        {visibleAttendanceNavigation.length >
+          0 && (
+          <div className="pt-6">
+            <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Attendance
+            </p>
+
+            <div className="space-y-1">
+              {visibleAttendanceNavigation.map(
+                (item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      [
+                        "block rounded-lg px-4 py-3 text-sm font-medium transition",
+                        isActive
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-slate-600 hover:bg-slate-50",
+                      ].join(" ")
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                )
+                 )}
+            </div>
+          </div>
+        )}
+
          {/* Settings */}
         {visibleSettingsNavigation.length >
           0 && (

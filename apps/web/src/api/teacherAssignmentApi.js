@@ -23,6 +23,19 @@ export async function getTeacherAssignment(
   return response.data;
 }
 
+export async function getMyTeacherAssignments(
+  params = {}
+) {
+  const response = await api.get(
+    "/teacher-assignments/my-assignments",
+    {
+      params,
+    }
+  );
+
+  return response.data;
+}
+
 export async function createTeacherAssignment(
   data
 ) {

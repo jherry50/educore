@@ -13,6 +13,8 @@ curl -i -c cookies.txt \
   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTc4YTBhMDMxMzc2MjllYWEzZWRhNDgiLCJyb2xlIjoiNmE3OGEwYTAzMTM3NjI5ZWFhM2VkYTQ3IiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc4NjI5MDg4NywiZXhwIjoxNzg2MjkxNzg3fQ.HY7FNo2N4aaBzX_DUriwy5MyZzxfBfaTgW_mDzgapS4
 
 
-  ClassId 6a7c5e589875468e69c2608f
-  TeacherId 6a7c91a65ac76f206ebb35fb
+  ClassId 6a79e842d4dbc7df24d45bc5.  pr1
+  stdentId 6a82803b3e97276bde71f830
+  TeacherId 6a7c8c4b5ac76f206ebb35f9
+  academicSessionId  6a7f2b645e677bcf7342a93b
   

@@ -10,6 +10,7 @@ import teacherRoutes from "../modules/teachers/teacher.routes.js";
 import subjectRoutes from "../modules/subjects/subject.routes.js";
 import teacherAssignmentRoutes from "../modules/teacherAssignments/teacherAssignment.routes.js";
 import academicSessionRoutes from "../modules/academicSessions/academicSession.routes.js";
+import attendanceRoutes from "../modules/attendance/attendance.routes.js";
 
 import {
   successResponse,
@@ -47,5 +48,7 @@ router.use("/subjects", subjectRoutes);
 router.use("/teacher-assignments", teacherAssignmentRoutes);
 
 router.use("/academic-sessions", academicSessionRoutes);
+
+router.use("/attendance",attendanceRoutes);
 
 export default router;

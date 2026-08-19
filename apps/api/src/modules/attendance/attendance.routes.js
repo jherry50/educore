@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 
 import {
   createAttendanceController,
@@ -9,19 +9,17 @@ import {
   updateAttendanceController,
 } from "./attendance.controller.js";
 
-import { protect } from "../../middleware/auth.middleware.js";
-import { requirePermission } from "../../middleware/permission.middleware.js";
+import { authenticate } from "../../middleware/authenticate.js";
+import { authorize } from "../../middleware/authorize.js";
 
-const router = express.Router();
-
-router.use(protect);
-
+const router = Router();
+router.use(authenticate);
 /*
  * View attendance
  */
 router.get(
   "/",
-  requirePermission("attendance", "view"),
+  authorize("attendance.view"),
   getAttendanceController
 );
 
@@ -30,7 +28,7 @@ router.get(
  */
 router.get(
   "/:id",
-  requirePermission("attendance", "view"),
+  authorize("attendance.view"),
   getAttendanceByIdController
 );
 
@@ -39,7 +37,7 @@ router.get(
  */
 router.post(
   "/",
-  requirePermission("attendance", "create"),
+  authorize("attendance.create"),
   createAttendanceController
 );
 
@@ -49,7 +47,7 @@ router.post(
  */
 router.post(
   "/bulk",
-  requirePermission("attendance", "create"),
+  authorize("attendance.create"),
   saveBulkAttendanceController
 );
 
@@ -58,7 +56,7 @@ router.post(
  */
 router.patch(
   "/:id",
-  requirePermission("attendance", "update"),
+  authorize("attendance.update"),
   updateAttendanceController
 );
 
@@ -67,7 +65,7 @@ router.patch(
  */
 router.delete(
   "/:id",
-  requirePermission("attendance", "delete"),
+  authorize("attendance.delete"),
   deleteAttendanceController
 );
 

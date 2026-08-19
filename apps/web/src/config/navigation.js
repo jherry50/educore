@@ -37,7 +37,7 @@ export const navigation = {
     },
     {
       label: "Attendance",
-      path: "/admin/attendance",
+      path: "/attendance",
       permission: "attendance.view",
     },
     {
@@ -70,11 +70,11 @@ export const navigation = {
       path: "/admin/permissions",
       permission: "permissions.view",
     },
-    {
-      label: "Settings",
-      path: "/admin/settings",
-      permission: "settings.view",
-    },
+    // {
+    //   label: "Settings",
+    //   path: "/admin/settings",
+    //   permission: "settings.view",
+    // },
   ],
 
   teacher: [
@@ -94,13 +94,18 @@ export const navigation = {
       permission: "teachers.view",
     },
     {
+      label: "Assignment",
+      path: "/teacher/teacher-assignments",
+      permission: "teachers.view",
+    },
+    {
       label: "Classes",
       path: "/teacher/classes",
       permission: "classes.view",
     },
     {
       label: "Attendance",
-      path: "/teacher/attendance",
+      path: "/attendance",
       permission: "attendance.view",
     },
     {
