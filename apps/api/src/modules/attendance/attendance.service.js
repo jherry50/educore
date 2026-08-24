@@ -949,6 +949,220 @@ export async function getAttendance(
 }
 
 /**
+ * Get attendance Statistics.
+ */
+export async function getStudentAttendanceStatistics(
+  studentId,
+  filters = {},
+  userId,
+  userRole
+) {
+  validateObjectId(studentId, "student");
+
+  const {
+    academicSession,
+    term,
+    startDate,
+    endDate,
+  } = filters;
+
+  // Verify that the student exists.
+  const student = await Student.findById(
+    studentId
+  ).populate("class", "name");
+
+  if (!student) {
+    throw new Error("Student not found.");
+  }
+
+  /*
+   * Teachers may only view attendance
+   * belonging to students in their assigned
+   * classes.
+   */
+  if (
+    String(userRole).toLowerCase() ===
+    "teacher"
+  ) {
+    const teacher =
+      await getTeacherByUserId(userId);
+
+    if (!teacher) {
+      throw new Error(
+        "Teacher profile not found."
+      );
+    }
+
+    const assignmentFilter = {
+      teacher: teacher._id,
+      isActive: true,
+    };
+
+    if (academicSession) {
+      assignmentFilter.academicSession =
+        academicSession;
+    }
+
+    if (term) {
+      assignmentFilter.term = term;
+    }
+
+    const assignedClasses =
+      await TeacherAssignment.find(
+        assignmentFilter
+      ).distinct("class");
+
+    const studentClassId =
+      student.class?._id ||
+      student.class;
+
+    const hasAccess =
+      assignedClasses.some(
+        (classId) =>
+          classId.toString() ===
+          studentClassId?.toString()
+      );
+
+    if (!hasAccess) {
+      throw new Error(
+        "You are not assigned to this student's class."
+      );
+    }
+  }
+
+  const query = {
+    student: studentId,
+  };
+
+  if (academicSession) {
+    validateObjectId(
+      academicSession,
+      "academicSession"
+    );
+
+    query.academicSession =
+      academicSession;
+  }
+
+  if (term) {
+    query.term = term;
+  }
+
+  if (startDate || endDate) {
+    query.date = {};
+
+    if (startDate) {
+      query.date.$gte = new Date(
+        `${startDate}T00:00:00.000Z`
+      );
+    }
+
+    if (endDate) {
+      query.date.$lte = new Date(
+        `${endDate}T23:59:59.999Z`
+      );
+    }
+  }
+
+  const records =
+    await Attendance.find(query)
+      .populate(
+        "class",
+        "name code"
+      )
+      .populate(
+        "academicSession",
+        "name"
+      )
+      .sort({
+        date: -1,
+      })
+      .lean();
+
+  const statistics = {
+    total: records.length,
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    attendancePercentage: 0,
+  };
+
+  records.forEach((record) => {
+    switch (record.status) {
+      case "Present":
+        statistics.present++;
+        break;
+
+      case "Absent":
+        statistics.absent++;
+        break;
+
+      case "Late":
+        statistics.late++;
+        break;
+
+      case "Excused":
+        statistics.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  /*
+   * Excused attendance is not counted as
+   * present or absent for the percentage.
+   */
+  const countedDays =
+    statistics.present +
+    statistics.absent +
+    statistics.late;
+
+  if (countedDays > 0) {
+    statistics.attendancePercentage =
+      Number(
+        (
+          ((statistics.present +
+            statistics.late) /
+            countedDays) *
+          100
+        ).toFixed(2)
+      );
+  }
+
+  return {
+    student: {
+      _id: student._id,
+      admissionNumber:
+        student.admissionNumber,
+      firstName:
+        student.firstName,
+      middleName:
+        student.middleName,
+      lastName:
+        student.lastName,
+      class: student.class,
+    },
+
+    filters: {
+      academicSession:
+        academicSession || null,
+      term: term || null,
+      startDate:
+        startDate || null,
+      endDate:
+        endDate || null,
+    },
+
+    statistics,
+
+    records,
+  };
+}
+
+/**
  * Get one attendance record.
  */
 export async function getAttendanceById(

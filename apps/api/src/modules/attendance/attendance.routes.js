@@ -7,6 +7,7 @@ import {
   getAttendanceController,
   saveBulkAttendanceController,
   updateAttendanceController,
+  getStudentAttendanceStatisticsController,
 } from "./attendance.controller.js";
 
 import { authenticate } from "../../middleware/authenticate.js";
@@ -21,6 +22,15 @@ router.get(
   "/",
   authorize("attendance.view"),
   getAttendanceController
+);
+
+/*
+ * View student attendance statistics
+ */
+router.get(
+  "/statistics/student/:studentId",
+  authorize("attendance.view"),
+  getStudentAttendanceStatisticsController
 );
 
 /*

@@ -15,6 +15,7 @@ import {
 
 import {
   getAttendance,
+  updateAttendance,
 } from "../../api/attendanceApi";
 
 const STATUS_OPTIONS = [
@@ -31,6 +32,13 @@ export default function AttendanceHistoryPage() {
   const [sessions, setSessions] = useState([]);
   const [classes, setClasses] = useState([]);
   const [records, setRecords] = useState([]);
+
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [editForm, setEditForm] = useState({
+    status: "",
+    remarks: "",
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const [filters, setFilters] = useState({
     academicSession: "",
@@ -183,6 +191,81 @@ export default function AttendanceHistoryPage() {
           err?.message ||
           "Unable to load your assigned classes."
       );
+    }
+  }
+
+  function openEditModal(record) {
+    setEditingRecord(record);
+
+    setEditForm({
+      status: record.status || "Present",
+      remarks: record.remarks || "",
+    });
+  }
+
+  function closeEditModal() {
+    if (savingEdit) {
+      return;
+    }
+
+    setEditingRecord(null);
+
+    setEditForm({
+      status: "",
+      remarks: "",
+    });
+  }
+
+  function handleEditChange(event) {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setEditForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  async function handleSaveEdit() {
+    if (!editingRecord?._id) {
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      setError("");
+
+      await updateAttendance(
+        editingRecord._id,
+        {
+          status: editForm.status,
+          remarks: editForm.remarks,
+        }
+      );
+
+      /*
+      * Refresh the current result set
+      * so the table immediately reflects
+      * the change.
+      */
+      await handleSearch();
+
+      closeEditModal();
+    } catch (err) {
+      console.error(
+        "Failed to update attendance:",
+        err
+      );
+
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Unable to update attendance."
+      );
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -655,6 +738,9 @@ export default function AttendanceHistoryPage() {
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Remarks
                     </th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
 
@@ -668,6 +754,7 @@ export default function AttendanceHistoryPage() {
                         record={
                           record
                         }
+                        onEdit={openEditModal}
                       />
                     )
                   )}
@@ -686,6 +773,7 @@ export default function AttendanceHistoryPage() {
                     record={
                       record
                     }
+                    onEdit={openEditModal}
                   />
                 )
               )}
@@ -693,6 +781,93 @@ export default function AttendanceHistoryPage() {
           </>
         )}
       </div>
+
+{     /* Edit modal       */}
+      {editingRecord && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+          <div className="border-b border-slate-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Edit Attendance
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              {getStudentName(
+                editingRecord.student || {}
+              )}
+            </p>
+          </div>
+
+          <div className="space-y-5 p-6">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Status
+              </label>
+
+              <select
+                name="status"
+                value={editForm.status}
+                onChange={handleEditChange}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="Present">
+                  Present
+                </option>
+
+                <option value="Absent">
+                  Absent
+                </option>
+
+                <option value="Late">
+                  Late
+                </option>
+
+                <option value="Excused">
+                  Excused
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Remarks
+              </label>
+
+              <textarea
+                name="remarks"
+                value={editForm.remarks}
+                onChange={handleEditChange}
+                rows={4}
+                placeholder="Optional remarks..."
+                className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+            <button
+              type="button"
+              onClick={closeEditModal}
+              disabled={savingEdit}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveEdit}
+              disabled={savingEdit}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {savingEdit
+                ? "Saving..."
+                : "Save Changes"}
+            </button>
+          </div>
+        </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -731,6 +906,7 @@ function SummaryCard({
 
 function HistoryRow({
   record,
+  onEdit,
 }) {
   const student =
     record.student || {};
@@ -765,12 +941,22 @@ function HistoryRow({
       <td className="px-6 py-4 text-sm text-slate-500">
         {record.remarks || "—"}
       </td>
+       <td className="px-6 py-4 text-right">
+        <button
+          type="button"
+          onClick={() => onEdit(record)}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Edit
+        </button>
+      </td>
     </tr>
   );
 }
 
 function HistoryCard({
   record,
+  onEdit,
 }) {
   const student =
     record.student || {};
@@ -830,6 +1016,15 @@ function HistoryCard({
           </p>
         </div>
       )}
+      <div className="mt-4 border-t border-slate-100 pt-3">
+        <button
+          type="button"
+          onClick={() => onEdit(record)}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Edit Attendance
+        </button>
+      </div>
     </div>
   );
 }

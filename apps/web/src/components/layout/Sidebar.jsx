@@ -35,6 +35,11 @@ const attendanceNavigation = [
     path: "/attendance-history",
     permission: "attendance.view",
   },
+  {
+    label: "Student Attendance",
+    path: "attendance/student",
+    permission: "attendance.view",
+  }
 ];
 
 export default function Sidebar() {

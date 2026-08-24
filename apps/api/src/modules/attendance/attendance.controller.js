@@ -5,6 +5,7 @@ import {
   getAttendanceById,
   saveBulkAttendance,
   updateAttendance,
+  getStudentAttendanceStatistics,
 } from "./attendance.service.js";
 
 /**
@@ -139,6 +140,59 @@ export async function getAttendanceController(
       message:
         error.message ||
         "Unable to fetch attendance.",
+    });
+  }
+}
+
+/**
+ * GET /api/statistics/student/:studentId"
+ *
+ * Get attendance statistics for a specific student.
+ */
+export async function getStudentAttendanceStatisticsController(
+  req,
+  res
+) {
+  try {
+    const {
+      studentId,
+    } = req.params;
+
+    const result =
+      await getStudentAttendanceStatistics(
+        studentId,
+        {
+          academicSession:
+            req.query.academicSession,
+
+          term:
+            req.query.term,
+
+          startDate:
+            req.query.startDate,
+
+          endDate:
+            req.query.endDate,
+        },
+        req.user._id,
+        req.user.role.name
+      );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error(
+      "Get student attendance statistics error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to retrieve student attendance statistics.",
     });
   }
 }

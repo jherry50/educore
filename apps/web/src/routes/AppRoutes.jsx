@@ -22,7 +22,8 @@ import SubjectsPage from "../pages/subjects/SubjectsPage.jsx";
 import TeacherAssignmentsPage from "../pages/teacherAssignments/TeacherAssignmentsPage.jsx";
 import AcademicSessionsPage from "../pages/academicSessions/AcademicSessionsPage.jsx";
 import AttendancePage from "../pages/attendance/AttendancePage.jsx";
-import AttendanceHistoryPage from "../pages/attendance/AttendanceHistoryPage";
+import AttendanceHistoryPage from "../pages/attendance/AttendanceHistoryPage.jsx";
+import StudentAttendancePage from "../pages/attendance/StudentAttendancePage.jsx";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -287,6 +288,21 @@ export default function AppRoutes() {
                     >
                   <PermissionRoute permission="attendance.view">
                     <AttendanceHistoryPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+            <Route
+              path="/attendance/student"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator", "teacher"
+                    ]}
+                    >
+                  <PermissionRoute permission="attendance.view">
+                    <StudentAttendancePage />
                   </PermissionRoute>
                 </RoleRoute>
               }

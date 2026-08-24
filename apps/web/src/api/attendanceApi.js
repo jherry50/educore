@@ -13,6 +13,20 @@ export async function getAttendance(
   return response.data;
 }
 
+export async function getStudentAttendanceStatistics(
+  studentId,
+  params = {}
+) {
+  const response = await api.get(
+    `/attendance/statistics/student/${studentId}`,
+    {
+      params,
+    }
+  );
+
+  return response.data;
+}
+
 export async function getAttendanceById(
   id
 ) {
