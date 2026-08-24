@@ -333,14 +333,31 @@ async function getTeacherByUserId(
 
 async function ensureTeacherCanAccessClass({
   userId,
+  userRole,
   classId,
   academicSession,
   term,
 }) {
+  /*
+   * Administrators are allowed to record
+   * attendance for any authorized class.
+   */
+  if (
+    String(userRole).toLowerCase() ===
+    "administrator"
+  ) {
+    return {
+      teacher: null,
+      assignment: null,
+    };
+  }
+
+  /*
+   * Teachers must have an active
+   * Teacher profile.
+   */
   const teacher =
-    await getTeacherByUserId(
-      userId
-    );
+    await getTeacherByUserId(userId);
 
   if (!teacher) {
     throw new Error(
@@ -374,7 +391,8 @@ async function ensureTeacherCanAccessClass({
  */
 export async function createAttendance(
   data,
-  recordedBy
+  recordedBy,
+  userRole
 ) {
   validateObjectId(
     recordedBy,
@@ -387,6 +405,7 @@ export async function createAttendance(
 
   await ensureTeacherCanAccessClass({
     userId: recordedBy,
+    userRole,
     classId: data.class,
     academicSession:
       data.academicSession,
@@ -451,7 +470,8 @@ export async function createAttendance(
  */
 export async function saveBulkAttendance(
   data,
-  recordedBy
+  recordedBy,
+  userRole,
 ) {
   validateObjectId(
     recordedBy,
@@ -479,6 +499,7 @@ export async function saveBulkAttendance(
   await ensureTeacherCanAccessClass({
       userId: recordedBy,
       classId,
+      userRole,
       academicSession,
       term,
   });
@@ -671,6 +692,7 @@ export async function saveBulkAttendance(
       updateOne: {
         filter: {
           student: record.student,
+          class: classId,
           academicSession,
           term,
           date: attendanceDate,
@@ -681,7 +703,7 @@ export async function saveBulkAttendance(
             class: classId,
             status: record.status,
             remarks:
-              record.remarks || "",
+            record.remarks || "",
             recordedBy,
           },
         },
@@ -730,9 +752,70 @@ export async function saveBulkAttendance(
  */
 export async function getAttendance(
   filters = {},
-  userId
+  userId,
+  userRole
 ) {
   const query = {};
+
+  if (userId) {
+    validateObjectId(
+      userId,
+      "user"
+    );
+
+    if (String(userRole).toLowerCase() ==="teacher") {
+    // teacher assignment filtering
+
+      const teacher =
+      await getTeacherByUserId(userId);
+
+      if (teacher) {
+        const assignmentFilter = {
+          teacher: teacher._id,
+          isActive: true,
+        };
+
+        if (filters.academicSession) {
+          assignmentFilter.academicSession =
+            filters.academicSession;
+        }
+
+        if (filters.term) {
+          assignmentFilter.term =
+            filters.term;
+        }
+
+        const assignedClasses =
+          await TeacherAssignment.find(
+            assignmentFilter
+          ).distinct("class");
+
+        if (filters.class) {
+          const hasAccess =
+            assignedClasses.some(
+              (id) =>
+                id.toString() ===
+                filters.class.toString()
+            );
+
+          if (!hasAccess) {
+            throw new Error(
+              "You are not assigned to this class for the selected academic session and term."
+            );
+          }
+
+          query.class =
+            filters.class;
+        } else {
+          query.class = {
+            $in: assignedClasses,
+          };
+        }
+      }
+    }
+
+    
+  }
 
   if (filters.student) {
     validateObjectId(
@@ -819,48 +902,40 @@ export async function getAttendance(
     }
   }
 
-  const teacher = await Teacher.findOne({
-  user: userId,
-  isActive: true,
-});
+//   const teacher = await Teacher.findOne({
+//     user: userId,
+//     isActive: true,
+//   });
 
-if (teacher) {
-  const assignedClasses =
-    await TeacherAssignment.find({
-      teacher: teacher._id,
-      isActive: true,
-      ...(academicSession
-        ? {
-            academicSession,
-          }
-        : {}),
-      ...(term
-        ? {
-            term,
-          }
-        : {}),
-    }).distinct("class");
+// if (teacher) {
+//   const assignedClasses =
+//     await TeacherAssignment.find({
+//       teacher: teacher._id,
+//       isActive: true,
+//       // ...(academicSession ? {academicSession,}: {}),
+//       // ...(term ? { term,}: {}),
+//     }).distinct("class");
 
-  /*
-   * If a specific class was requested,
-   * make sure the teacher is assigned
-   * to it.
-   */
-  if (classId) {
-    const hasAccess =
-      assignedClasses.some(
-        (id) =>
-          id.toString() ===
-          classId.toString()
-      );
+//   /*
+//    * If a specific class was requested,
+//    * make sure the teacher is assigned
+//    * to it.
+//    */
+//   if (classId) {
+//     const hasAccess =
+//       assignedClasses.some(
+//         (id) =>
+//           id.toString() ===
+//           classId.toString()
+//       );
 
-    if (!hasAccess) {
-      throw new Error(
-        "You are not assigned to this class for the selected academic session and term."
-      );
-    }
-  }
-}
+//     if (!hasAccess) {
+//       throw new Error(
+//         "You are not assigned to this class for the selected academic session and term."
+//       );
+//     }
+//   }
+// }
 
   const attendance =
     populateAttendance(
@@ -895,7 +970,8 @@ export async function getAttendanceById(
 export async function updateAttendance(
   id,
   data,
-  recordedBy
+  recordedBy,
+  userRole
 ) {
   validateObjectId(
     id,
@@ -950,6 +1026,7 @@ export async function updateAttendance(
 
   await ensureTeacherCanAccessClass({
     userId: recordedBy,
+    userRole,
     classId: mergedData.class,
     academicSession:
       mergedData.academicSession,

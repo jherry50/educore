@@ -119,7 +119,7 @@ export default function AppRoutes() {
               }
             />
             <Route
-              path="/teachers/:id/edit"
+              path="admin/teachers/:id/edit"
               element={
                 <PermissionRoute permission="teachers.update">
                   <TeacherEditPage />

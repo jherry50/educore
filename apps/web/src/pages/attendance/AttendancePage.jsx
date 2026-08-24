@@ -75,7 +75,6 @@ export default function AttendancePage() {
     useState(false);
 
   const { user } = useAuth();
-  console.log("User in AttendancePage:", user);
   /*
    * Load sessions and classes
    * when the page opens.
@@ -127,7 +126,7 @@ export default function AttendancePage() {
 
     const isTeacher =
       role === "teacher";
-debugger
+
     if (isTeacher) {
       /*
        * Teachers should only see classes

@@ -20,7 +20,8 @@ export async function createAttendanceController(
     const attendance =
       await createAttendance(
         req.body,
-        req.user._id
+        req.user._id,
+        req.user.role.name
       );
 
     return res.status(201).json({
@@ -58,7 +59,8 @@ export async function saveBulkAttendanceController(
     const result =
       await saveBulkAttendance(
         req.body,
-        req.user._id
+        req.user._id,
+        req.user.role.name
       );
 
     return res.status(200).json({
@@ -118,7 +120,8 @@ export async function getAttendanceController(
         endDate:
           req.query.endDate,
       }, 
-      req.user._id
+      req.user._id,
+      req.user.role.name
     );
 
     return res.status(200).json({
@@ -196,7 +199,8 @@ export async function updateAttendanceController(
       await updateAttendance(
         req.params.id,
         req.body,
-        req.user._id
+        req.user._id,
+        req.user.role.name
       );
 
     if (!attendance) {
