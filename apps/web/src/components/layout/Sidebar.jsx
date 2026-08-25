@@ -37,7 +37,7 @@ const attendanceNavigation = [
   },
   {
     label: "Student Attendance",
-    path: "attendance/student",
+    path: "/attendance/student",
     permission: "attendance.view",
   }
 ];

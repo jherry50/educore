@@ -35,11 +35,11 @@ export const navigation = {
       path: "/admin/subjects",
       permission: "subjects.view",
     },
-    {
-      label: "Attendance",
-      path: "/attendance",
-      permission: "attendance.view",
-    },
+    // {
+    //   label: "Attendance",
+    //   path: "/attendance",
+    //   permission: "attendance.view",
+    // },
     {
       label: "Results",
       path: "/admin/results",
@@ -103,11 +103,11 @@ export const navigation = {
       path: "/teacher/classes",
       permission: "classes.view",
     },
-    {
-      label: "Attendance",
-      path: "/attendance",
-      permission: "attendance.view",
-    },
+    // {
+    //   label: "Attendance",
+    //   path: "/attendance",
+    //   permission: "attendance.view",
+    // },
     {
       label: "Results",
       path: "/teacher/results",
@@ -126,11 +126,11 @@ export const navigation = {
       path: "/parent/children",
       permission: "students.view",
     },
-    {
-      label: "Attendance",
-      path: "/parent/attendance",
-      permission: "attendance.view",
-    },
+    // {
+    //   label: "Attendance",
+    //   path: "/parent/attendance",
+    //   permission: "attendance.view",
+    // },
     {
       label: "Results",
       path: "/parent/results",
@@ -148,11 +148,11 @@ export const navigation = {
       label: "My Profile",
       path: "/student/profile",
     },
-    {
-      label: "Attendance",
-      path: "/student/attendance",
-      permission: "attendance.view",
-    },
+    // {
+    //   label: "Attendance",
+    //   path: "/student/attendance",
+    //   permission: "attendance.view",
+    // },
     {
       label: "Results",
       path: "/student/results",
