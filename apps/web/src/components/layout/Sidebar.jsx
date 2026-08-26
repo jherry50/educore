@@ -26,6 +26,11 @@ const settingsNavigation = [
 
 const attendanceNavigation = [
   {
+    label: "Dashboard",
+    path: "/attendance/dashboard",
+    permission: "attendance.view",
+  },
+  {
     label: "Take Attendance",
     path: "/attendance",
     permission: "attendance.view",
@@ -39,7 +44,17 @@ const attendanceNavigation = [
     label: "Student Attendance",
     path: "/attendance/student",
     permission: "attendance.view",
-  }
+  },
+  {
+    label: "Class Attendance",
+    path: "/attendance/class",
+    permission: "attendance.view",
+  },
+  {
+    label: "Reports",
+    path: "/attendance/report",
+    permission: "attendance.view",
+  },
 ];
 
 export default function Sidebar() {

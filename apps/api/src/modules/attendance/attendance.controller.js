@@ -6,7 +6,14 @@ import {
   saveBulkAttendance,
   updateAttendance,
   getStudentAttendanceStatistics,
+  getClassAttendanceStatistics,
+  getAttendanceDashboard,
+  getAttendanceReport,
 } from "./attendance.service.js";
+
+import { 
+  generateAttendanceExcel,
+} from "./attendance.export.service.js";
 
 /**
  * POST /api/attendance
@@ -198,6 +205,168 @@ export async function getStudentAttendanceStatisticsController(
 }
 
 /**
+ * GET /api/statistics/class/:classId"
+ *
+ * Get attendance statistics for a specific class.
+ */
+export async function getClassAttendanceStatisticsController(
+  req,
+  res
+) {
+  try {
+    const {
+      classId,
+    } = req.params;
+
+    const result =
+      await getClassAttendanceStatistics(
+        classId,
+        {
+          academicSession:
+            req.query.academicSession,
+
+          term:
+            req.query.term,
+
+          startDate:
+            req.query.startDate,
+
+          endDate:
+            req.query.endDate,
+        },
+        req.user._id,
+        req.user.role.name
+      );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error(
+      "Get class attendance statistics error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to retrieve class attendance statistics.",
+    });
+  }
+}
+
+/**
+ * GET /api/attendance/dashboard"
+ *
+ * Get attendance dashboard 
+ */
+export async function getAttendanceDashboardController(
+  req,
+  res
+) {
+  try {
+    const result =
+      await getAttendanceDashboard(
+        {
+          academicSession:
+            req.query.academicSession,
+
+          term:
+            req.query.term,
+
+          startDate:
+            req.query.startDate,
+
+          endDate:
+            req.query.endDate,
+        },
+        req.user._id,
+        req.user.role.name
+      );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error(
+      "Get attendance dashboard error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to load attendance dashboard.",
+    });
+  }
+}
+
+/**
+ * GET /api/attendance/report"
+ *
+ * Get attendance dashboard 
+ */
+export async function getAttendanceReportController(
+  req,
+  res
+) {
+  try {
+    const result =
+      await getAttendanceReport(
+        {
+          reportType:
+            req.query.reportType ||
+            "class",
+
+          classId:
+            req.query.classId,
+
+          studentId:
+            req.query.studentId,
+
+          academicSession:
+            req.query.academicSession,
+
+          term:
+            req.query.term,
+
+          startDate:
+            req.query.startDate,
+
+          endDate:
+            req.query.endDate,
+
+          status:
+            req.query.status,
+        },
+        req.user.id,
+        req.user.role.name
+      );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error(
+      "Get attendance report error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to generate attendance report.",
+    });
+  }
+}
+
+/**
  * GET /api/attendance/:id
  *
  * Get one attendance record.
@@ -325,6 +494,86 @@ export async function deleteAttendanceController(
       message:
         error.message ||
         "Unable to delete attendance.",
+    });
+  }
+}
+
+/**
+ * Export /api/reports/export/excel
+ *
+ * Export attendance report to Excel.
+ */
+
+export async function exportAttendanceExcelController(
+  req,
+  res
+) {
+  try {
+    const report =
+      await getAttendanceReport(
+        {
+          reportType:
+            req.query.reportType ||
+            "class",
+
+          classId:
+            req.query.classId,
+
+          studentId:
+            req.query.studentId,
+
+          academicSession:
+            req.query.academicSession,
+
+          term:
+            req.query.term,
+
+          startDate:
+            req.query.startDate,
+
+          endDate:
+            req.query.endDate,
+
+          status:
+            req.query.status,
+        },
+        req.user._id,
+        req.user.role.name
+      );
+
+    const workbook =
+      await generateAttendanceExcel(
+        report
+      );
+
+    const buffer =
+      await workbook.xlsx.writeBuffer();
+
+    const filename =
+      `attendance-report-${Date.now()}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`
+    );
+
+    return res.send(buffer);
+  } catch (error) {
+    console.error(
+      "Export attendance Excel error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to export attendance report.",
     });
   }
 }

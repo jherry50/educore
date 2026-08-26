@@ -949,7 +949,7 @@ export async function getAttendance(
 }
 
 /**
- * Get attendance Statistics.
+ * Get student attendance Statistics.
  */
 export async function getStudentAttendanceStatistics(
   studentId,
@@ -1157,6 +1157,1077 @@ export async function getStudentAttendanceStatistics(
     },
 
     statistics,
+
+    records,
+  };
+}
+
+/**
+ * Get class attendance Statistics.
+ */
+export async function getClassAttendanceStatistics(
+  classId,
+  filters = {},
+  userId,
+  userRole
+) {
+  validateObjectId(classId, "class");
+
+  const {
+    academicSession,
+    term,
+    startDate,
+    endDate,
+  } = filters;
+
+  /*
+   * Teachers can only view classes they are
+   * assigned to.
+   */
+  if (
+    String(userRole).toLowerCase() ===
+    "teacher"
+  ) {
+    const teacher =
+      await getTeacherByUserId(userId);
+
+    if (!teacher) {
+      throw new Error(
+        "Teacher profile not found."
+      );
+    }
+
+    const assignmentFilter = {
+      teacher: teacher._id,
+      class: classId,
+      isActive: true,
+    };
+
+    if (academicSession) {
+      assignmentFilter.academicSession =
+        academicSession;
+    }
+
+    if (term) {
+      assignmentFilter.term = term;
+    }
+
+    const assignment =
+      await TeacherAssignment.findOne(
+        assignmentFilter
+      );
+
+    if (!assignment) {
+      throw new Error(
+        "You are not assigned to this class for the selected academic session and term."
+      );
+    }
+  }
+
+  /*
+   * Verify class.
+   */
+  const classItem =
+    await Class.findById(classId).lean();
+
+  if (!classItem) {
+    throw new Error("Class not found.");
+  }
+
+  /*
+   * Attendance query.
+   */
+  const attendanceQuery = {
+    class: classId,
+  };
+
+  if (academicSession) {
+    validateObjectId(
+      academicSession,
+      "academicSession"
+    );
+
+    attendanceQuery.academicSession =
+      academicSession;
+  }
+
+  if (term) {
+    attendanceQuery.term = term;
+  }
+
+  if (startDate || endDate) {
+    attendanceQuery.date = {};
+
+    if (startDate) {
+      attendanceQuery.date.$gte =
+        new Date(
+          `${startDate}T00:00:00.000Z`
+        );
+    }
+
+    if (endDate) {
+      attendanceQuery.date.$lte =
+        new Date(
+          `${endDate}T23:59:59.999Z`
+        );
+    }
+  }
+
+  const records =
+    await Attendance.find(
+      attendanceQuery
+    )
+      .populate(
+        "student",
+        "firstName middleName lastName admissionNumber"
+      )
+      .lean();
+
+  /*
+   * Class-level totals.
+   */
+  const statistics = {
+    totalRecords: records.length,
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    attendancePercentage: 0,
+  };
+
+  records.forEach((record) => {
+    switch (record.status) {
+      case "Present":
+        statistics.present++;
+        break;
+
+      case "Absent":
+        statistics.absent++;
+        break;
+
+      case "Late":
+        statistics.late++;
+        break;
+
+      case "Excused":
+        statistics.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  const countedDays =
+    statistics.present +
+    statistics.absent +
+    statistics.late;
+
+  if (countedDays > 0) {
+    statistics.attendancePercentage =
+      Number(
+        (
+          ((statistics.present +
+            statistics.late) /
+            countedDays) *
+          100
+        ).toFixed(2)
+      );
+  }
+
+  /*
+   * Student breakdown.
+   */
+  const studentsInClass =
+  await Student.find({
+    class: classId,
+  })
+    .select(
+      "firstName middleName lastName admissionNumber"
+    )
+    .lean();
+
+const studentMap = new Map();
+
+/*
+ * First create an entry for EVERY student
+ * enrolled in the class.
+ */
+studentsInClass.forEach((student) => {
+  const studentId =
+    student._id.toString();
+
+  studentMap.set(studentId, {
+    student: {
+      _id: student._id,
+      firstName:
+        student.firstName,
+      middleName:
+        student.middleName,
+      lastName:
+        student.lastName,
+      admissionNumber:
+        student.admissionNumber,
+    },
+
+    total: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    attendancePercentage: 0,
+  });
+});
+
+/*
+ * Now merge attendance records into
+ * the students already enrolled.
+ */
+records.forEach((record) => {
+  const student = record.student;
+
+  if (!student) {
+    return;
+  }
+
+  const studentId =
+    student._id.toString();
+
+  /*
+   * Normally this student already exists
+   * because they belong to the class.
+   */
+  if (!studentMap.has(studentId)) {
+    studentMap.set(studentId, {
+      student: {
+        _id: student._id,
+        firstName:
+          student.firstName,
+        middleName:
+          student.middleName,
+        lastName:
+          student.lastName,
+        admissionNumber:
+          student.admissionNumber,
+      },
+
+      total: 0,
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0,
+      attendancePercentage: 0,
+    });
+  }
+
+  const item =
+    studentMap.get(studentId);
+
+  item.total++;
+
+  switch (record.status) {
+    case "Present":
+      item.present++;
+      break;
+
+    case "Absent":
+      item.absent++;
+      break;
+
+    case "Late":
+      item.late++;
+      break;
+
+    case "Excused":
+      item.excused++;
+      break;
+
+    default:
+      break;
+  }
+});
+
+const students =
+  Array.from(
+    studentMap.values()
+  ).map((item) => {
+    const countedDays =
+      item.present +
+      item.absent +
+      item.late;
+
+    if (countedDays > 0) {
+      item.attendancePercentage =
+        Number(
+          (
+            ((item.present +
+              item.late) /
+              countedDays) *
+            100
+          ).toFixed(2)
+        );
+    }
+
+    return item;
+  });
+
+students.sort(
+  (a, b) =>
+    b.attendancePercentage -
+    a.attendancePercentage
+);
+
+const lowAttendanceStudents =
+  students.filter(
+    (student) =>
+      student.total > 0 &&
+      student.attendancePercentage < 75
+  );
+
+  return {
+    class: {
+      _id: classItem._id,
+      name: classItem.name,
+      code: classItem.code,
+    },
+
+    totalStudents:studentsInClass.length,
+
+    filters: {
+      academicSession:
+        academicSession || null,
+      term: term || null,
+      startDate:
+        startDate || null,
+      endDate:
+        endDate || null,
+    },
+
+    statistics,
+
+    students,
+
+    lowAttendanceStudents,
+  };
+}
+
+/**
+ * Get class attendance Dashboard.
+ */
+export async function getAttendanceDashboard(
+  filters = {},
+  userId,
+  userRole
+) {
+  const {
+    academicSession,
+    term,
+    startDate,
+    endDate,
+  } = filters;
+
+  if (academicSession) {
+    validateObjectId(
+      academicSession,
+      "academicSession"
+    );
+  }
+
+  /*
+   * Determine the classes the user can access.
+   */
+  let classQuery = {};
+
+  if (
+    String(userRole).toLowerCase() ===
+    "teacher"
+  ) {
+    const teacher =
+      await getTeacherByUserId(userId);
+
+    if (!teacher) {
+      throw new Error(
+        "Teacher profile not found."
+      );
+    }
+
+    const assignmentFilter = {
+      teacher: teacher._id,
+      isActive: true,
+    };
+
+    if (academicSession) {
+      assignmentFilter.academicSession =
+        academicSession;
+    }
+
+    if (term) {
+      assignmentFilter.term = term;
+    }
+
+    const assignments =
+      await TeacherAssignment.find(
+        assignmentFilter
+      )
+        .select("class")
+        .lean();
+
+    const classIds =
+      assignments.map(
+        (assignment) =>
+          assignment.class
+      );
+
+    classQuery = {
+      _id: {
+        $in: classIds,
+      },
+    };
+  }
+
+  const classes =
+    await Class.find(classQuery)
+      .select("name code")
+      .lean();
+
+  /*
+   * Build attendance query.
+   */
+  const attendanceQuery = {};
+
+  if (academicSession) {
+    attendanceQuery.academicSession =
+      academicSession;
+  }
+
+  if (term) {
+    attendanceQuery.term = term;
+  }
+
+  if (startDate || endDate) {
+    attendanceQuery.date = {};
+
+    if (startDate) {
+      attendanceQuery.date.$gte =
+        new Date(
+          `${startDate}T00:00:00.000Z`
+        );
+    }
+
+    if (endDate) {
+      attendanceQuery.date.$lte =
+        new Date(
+          `${endDate}T23:59:59.999Z`
+        );
+    }
+  }
+
+  /*
+   * If no date range was provided,
+   * use today's date for the daily summary.
+   */
+  const todayStart =
+    new Date();
+
+  todayStart.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const todayEnd =
+    new Date();
+
+  todayEnd.setHours(
+    23,
+    59,
+    59,
+    999
+  );
+
+  const todayQuery = {
+    ...attendanceQuery,
+    date: {
+      $gte: startDate
+        ? attendanceQuery.date.$gte
+        : todayStart,
+
+      $lte: endDate
+        ? attendanceQuery.date.$lte
+        : todayEnd,
+    },
+  };
+
+  const [records, todayRecords] =
+  await Promise.all([
+    Attendance.find(attendanceQuery)
+      .populate(
+        "student",
+        "firstName middleName lastName admissionNumber"
+      )
+      .populate(
+        "class",
+        "name code"
+      )
+      .lean(),
+
+    Attendance.find(todayQuery).lean(),
+  ]);
+
+  /*
+   * Overall summary.
+   */
+  const summary = {
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    total: records.length,
+    attendancePercentage: 0,
+  };
+
+  records.forEach((record) => {
+    switch (record.status) {
+      case "Present":
+        summary.present++;
+        break;
+
+      case "Absent":
+        summary.absent++;
+        break;
+
+      case "Late":
+        summary.late++;
+        break;
+
+      case "Excused":
+        summary.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  const counted =
+    summary.present +
+    summary.absent +
+    summary.late;
+
+  if (counted > 0) {
+    summary.attendancePercentage =
+      Number(
+        (
+          ((summary.present +
+            summary.late) /
+            counted) *
+          100
+        ).toFixed(2)
+      );
+  }
+
+  /*
+   * Today's summary.
+   */
+  const today = {
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    total: todayRecords.length,
+  };
+
+  todayRecords.forEach((record) => {
+    switch (record.status) {
+      case "Present":
+        today.present++;
+        break;
+
+      case "Absent":
+        today.absent++;
+        break;
+
+      case "Late":
+        today.late++;
+        break;
+
+      case "Excused":
+        today.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  /*
+   * Class performance.
+   */
+  const classMap = new Map();
+
+  classes.forEach((classItem) => {
+    classMap.set(
+      classItem._id.toString(),
+      {
+        class: {
+          _id: classItem._id,
+          name: classItem.name,
+          code: classItem.code,
+        },
+
+        total: 0,
+        present: 0,
+        absent: 0,
+        late: 0,
+        excused: 0,
+        attendancePercentage: 0,
+      }
+    );
+  });
+
+  records.forEach((record) => {
+    if (!record.class) {
+      return;
+    }
+
+    const classId = record.class?._id?.toString();
+    if (!classId) {
+      return;
+    }
+
+    if (!classMap.has(classId)) {
+      return;
+    }
+
+    const item =
+      classMap.get(classId);
+
+    item.total++;
+
+    switch (record.status) {
+      case "Present":
+        item.present++;
+        break;
+
+      case "Absent":
+        item.absent++;
+        break;
+
+      case "Late":
+        item.late++;
+        break;
+
+      case "Excused":
+        item.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  const classPerformance =
+    Array.from(
+      classMap.values()
+    ).map((item) => {
+      const countedDays =
+        item.present +
+        item.absent +
+        item.late;
+
+      if (countedDays > 0) {
+        item.attendancePercentage =
+          Number(
+            (
+              ((item.present +
+                item.late) /
+                countedDays) *
+              100
+            ).toFixed(2)
+          );
+      }
+
+      return item;
+    });
+
+  /*
+   * Students requiring attention.
+   */
+  const studentMap = new Map();
+
+  records.forEach((record) => {
+    const student =
+      record.student;
+
+    if (!student) {
+      return;
+    }
+
+    const studentId =
+      student._id.toString();
+
+    if (!studentMap.has(studentId)) {
+      studentMap.set(
+        studentId,
+        {
+          student: {
+            _id: student._id,
+            firstName:
+              student.firstName,
+            middleName:
+              student.middleName,
+            lastName:
+              student.lastName,
+            admissionNumber:
+              student.admissionNumber,
+          },
+
+          class:
+            record.class || null,
+
+          total: 0,
+          present: 0,
+          absent: 0,
+          late: 0,
+          excused: 0,
+          attendancePercentage: 0,
+        }
+      );
+    }
+
+    const item =
+      studentMap.get(studentId);
+
+    item.total++;
+
+    switch (record.status) {
+      case "Present":
+        item.present++;
+        break;
+
+      case "Absent":
+        item.absent++;
+        break;
+
+      case "Late":
+        item.late++;
+        break;
+
+      case "Excused":
+        item.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  const students =
+    Array.from(
+      studentMap.values()
+    ).map((item) => {
+      const countedDays =
+        item.present +
+        item.absent +
+        item.late;
+
+      if (countedDays > 0) {
+        item.attendancePercentage =
+          Number(
+            (
+              ((item.present +
+                item.late) /
+                countedDays) *
+              100
+            ).toFixed(2)
+          );
+      }
+
+      return item;
+    });
+
+  const lowAttendanceStudents =
+    students
+      .filter(
+        (student) =>
+          student.total > 0 &&
+          student.attendancePercentage <
+            75
+      )
+      .sort(
+        (a, b) =>
+          a.attendancePercentage -
+          b.attendancePercentage
+      )
+      .slice(0, 10);
+
+  return {
+    filters: {
+      academicSession:
+        academicSession || null,
+      term:
+        term || null,
+      startDate:
+        startDate || null,
+      endDate:
+        endDate || null,
+    },
+
+    summary,
+
+    today,
+
+    classPerformance,
+
+    lowAttendanceStudents,
+  };
+}
+
+/**
+ * Get class attendance report.
+ */
+export async function getAttendanceReport(
+  filters = {},
+  userId,
+  userRole
+) {
+  const {
+    reportType = "class",
+    classId,
+    studentId,
+    academicSession,
+    term,
+    startDate,
+    endDate,
+    status,
+  } = filters;
+
+  if (classId) {
+    validateObjectId(classId, "class");
+  }
+
+  if (studentId) {
+    validateObjectId(studentId, "student");
+  }
+
+  if (academicSession) {
+    validateObjectId(
+      academicSession,
+      "academicSession"
+    );
+  }
+
+  /*
+   * Teacher authorization.
+   */
+  if (
+    String(userRole).toLowerCase() ===
+    "teacher"
+  ) {
+    const teacher =
+      await getTeacherByUserId(userId);
+
+    if (!teacher) {
+      throw new Error(
+        "Teacher profile not found."
+      );
+    }
+
+    const assignmentQuery = {
+      teacher: teacher._id,
+      isActive: true,
+    };
+
+    if (academicSession) {
+      assignmentQuery.academicSession =
+        academicSession;
+    }
+
+    if (term) {
+      assignmentQuery.term = term;
+    }
+
+    const assignments =
+      await TeacherAssignment.find(
+        assignmentQuery
+      )
+        .select("class")
+        .lean();
+
+    const assignedClassIds =
+      assignments.map((item) =>
+        item.class.toString()
+      );
+
+    if (
+      classId &&
+      !assignedClassIds.includes(
+        classId.toString()
+      )
+    ) {
+      throw new Error(
+        "You are not assigned to this class."
+      );
+    }
+
+    /*
+     * If requesting a specific student,
+     * verify the student's class.
+     */
+    if (studentId) {
+      const student =
+        await Student.findById(
+          studentId
+        )
+          .select("class")
+          .lean();
+
+      if (!student) {
+        throw new Error(
+          "Student not found."
+        );
+      }
+
+      if (
+        !assignedClassIds.includes(
+          student.class?.toString()
+        )
+      ) {
+        throw new Error(
+          "You are not assigned to this student's class."
+        );
+      }
+    }
+  }
+
+  const query = {};
+
+  if (classId) {
+    query.class = classId;
+  }
+
+  if (studentId) {
+    query.student = studentId;
+  }
+
+  if (academicSession) {
+    query.academicSession =
+      academicSession;
+  }
+
+  if (term) {
+    query.term = term;
+  }
+
+  if (status) {
+    query.status = status;
+  }
+
+  if (startDate || endDate) {
+    query.date = {};
+
+    if (startDate) {
+      query.date.$gte = new Date(
+        `${startDate}T00:00:00.000Z`
+      );
+    }
+
+    if (endDate) {
+      query.date.$lte = new Date(
+        `${endDate}T23:59:59.999Z`
+      );
+    }
+  }
+
+  const records =
+    await Attendance.find(query)
+      .populate(
+        "student",
+        "firstName middleName lastName admissionNumber"
+      )
+      .populate(
+        "class",
+        "name code"
+      )
+      .populate(
+        "academicSession",
+        "name"
+      )
+      .sort({
+        date: -1,
+      })
+      .lean();
+
+  /*
+   * Summary.
+   */
+  const summary = {
+    total: records.length,
+    present: 0,
+    absent: 0,
+    late: 0,
+    excused: 0,
+    attendancePercentage: 0,
+  };
+
+  records.forEach((record) => {
+    switch (record.status) {
+      case "Present":
+        summary.present++;
+        break;
+
+      case "Absent":
+        summary.absent++;
+        break;
+
+      case "Late":
+        summary.late++;
+        break;
+
+      case "Excused":
+        summary.excused++;
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  const counted =
+    summary.present +
+    summary.absent +
+    summary.late;
+
+  if (counted > 0) {
+    summary.attendancePercentage =
+      Number(
+        (
+          ((summary.present +
+            summary.late) /
+            counted) *
+          100
+        ).toFixed(2)
+      );
+  }
+
+  return {
+    reportType,
+
+    filters: {
+      classId: classId || null,
+      studentId: studentId || null,
+      academicSession:
+        academicSession || null,
+      term: term || null,
+      startDate:
+        startDate || null,
+      endDate:
+        endDate || null,
+      status: status || null,
+    },
+
+    summary,
 
     records,
   };

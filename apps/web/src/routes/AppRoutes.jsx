@@ -22,8 +22,11 @@ import SubjectsPage from "../pages/subjects/SubjectsPage.jsx";
 import TeacherAssignmentsPage from "../pages/teacherAssignments/TeacherAssignmentsPage.jsx";
 import AcademicSessionsPage from "../pages/academicSessions/AcademicSessionsPage.jsx";
 import AttendancePage from "../pages/attendance/AttendancePage.jsx";
+import AttendanceDashboardPage from "../pages/attendance/AttendanceDashboardPage.jsx";
+import AttendanceReportsPage from "../pages/attendance/AttendanceReportsPage";
 import AttendanceHistoryPage from "../pages/attendance/AttendanceHistoryPage.jsx";
 import StudentAttendancePage from "../pages/attendance/StudentAttendancePage.jsx";
+import ClassAttendancePage from "../pages/attendance/ClassAttendancePage.jsx";
 
 import TeacherDashboardPage from "../pages/teacher/TeacherDashboardPage.jsx";
 import ParentDashboardPage from "../pages/parent/ParentDashboardPage.jsx";
@@ -279,6 +282,36 @@ export default function AppRoutes() {
             />
 
              <Route
+              path="/attendance/dashboard"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator", "teacher"
+                    ]}
+                    >
+                  <PermissionRoute permission="attendance.view">
+                    <AttendanceDashboardPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+             <Route
+              path="/attendance/report"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator", "teacher"
+                    ]}
+                    >
+                  <PermissionRoute permission="attendance.view">
+                    <AttendanceReportsPage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+             <Route
               path="/attendance-history"
               element={
                  <RoleRoute
@@ -303,6 +336,21 @@ export default function AppRoutes() {
                     >
                   <PermissionRoute permission="attendance.view">
                     <StudentAttendancePage />
+                  </PermissionRoute>
+                </RoleRoute>
+              }
+            />
+
+            <Route
+              path="/attendance/class"
+              element={
+                 <RoleRoute
+                    allowedRoles={[
+                        "administrator", "teacher"
+                    ]}
+                    >
+                  <PermissionRoute permission="attendance.view">
+                    <ClassAttendancePage />
                   </PermissionRoute>
                 </RoleRoute>
               }

@@ -13,12 +13,52 @@ export async function getAttendance(
   return response.data;
 }
 
+export async function getAttendanceDashboard(
+  params = {}
+) {
+  const response = await api.get(
+    "/attendance/dashboard",
+    {
+      params,
+    }
+  );
+
+  return response.data;
+}
+
+export async function getAttendanceReport(
+  params = {}
+) {
+  const response = await api.get(
+    "/attendance/reports",
+    {
+      params,
+    }
+  );
+
+  return response.data;
+}
+
 export async function getStudentAttendanceStatistics(
   studentId,
   params = {}
 ) {
   const response = await api.get(
     `/attendance/statistics/student/${studentId}`,
+    {
+      params,
+    }
+  );
+
+  return response.data;
+}
+
+export async function getClassAttendanceStatistics(
+  classId,
+  params = {}
+) {
+  const response = await api.get(
+    `/attendance/statistics/class/${classId}`,
     {
       params,
     }

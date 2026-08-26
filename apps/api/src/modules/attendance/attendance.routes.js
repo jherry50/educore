@@ -8,6 +8,10 @@ import {
   saveBulkAttendanceController,
   updateAttendanceController,
   getStudentAttendanceStatisticsController,
+  getClassAttendanceStatisticsController,
+  getAttendanceDashboardController,
+  getAttendanceReportController,
+  exportAttendanceExcelController,
 } from "./attendance.controller.js";
 
 import { authenticate } from "../../middleware/authenticate.js";
@@ -25,12 +29,50 @@ router.get(
 );
 
 /*
+ * View attendance dashboard
+ */
+router.get(
+  "/dashboard",
+  authorize("attendance.view"),
+  getAttendanceDashboardController
+);
+
+/*
+ * View attendance report
+ */
+router.get(
+  "/reports",
+  authorize("attendance.view"),
+  getAttendanceReportController
+);
+
+/*
+ * export attendance report
+ */
+router.get(
+  "/reports/export/excel",
+  authorize("attendance.view"),
+  exportAttendanceExcelController
+);
+
+
+
+/*
  * View student attendance statistics
  */
 router.get(
   "/statistics/student/:studentId",
   authorize("attendance.view"),
   getStudentAttendanceStatisticsController
+);
+
+/*
+ * View class attendance statistics
+ */
+router.get(
+  "/statistics/class/:classId",
+  authorize("attendance.view"),
+  getClassAttendanceStatisticsController
 );
 
 /*
